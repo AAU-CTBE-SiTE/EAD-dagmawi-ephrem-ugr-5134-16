@@ -1,1 +1,1 @@
-# Lab 1: Java Maven Starter Project
+# Lab : Enterprise application development laboratory reopsitory
