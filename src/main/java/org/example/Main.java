@@ -2,30 +2,26 @@ package org.example;
 
 
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
 
 public class Main
 {
     public static void main( String[] args )
     {
-        //tight coupling
-        // Student student = new Student();
-        //student.getHello();
 
-        ApplicationContext context = new ClassPathXmlApplicationContext("beansConfig.xml");
-        Student student = context.getBean("student", Student.class);
+        //annotation based injection
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        Student student1 = context.getBean("student", Student.class);
+        Student student2 = context.getBean("student", Student.class);
+        // Check if both references point to the SAME instance
+        System.out.println(student1 == student2);
+
+        student1.setName("John Doe");
+        System.out.println(student2.getName());
+        student1.getDetails();
 
 
-        /* used when not having a bean definition inside beanConfig.xml
-        student.setId(101);
-        student.setName("John");
-        student.setAge(34);
-        */
-
-        //student.getHello();
-        //student.getDetails();
-        System.out.println("Student Name: " + student.getName());
-        System.out.println(student);
     }
 
     }
