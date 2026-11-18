@@ -3,122 +3,68 @@ package com.project.Actor.controller;
 
 import com.project.Actor.model.Actor;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
+import com.project.Actor.services.ActorService;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.transaction.annotation.Transactional;
+
 
 import java.util.List;
-import java.util.Map;
+
 
 @RestController
 @RequestMapping("/api/actors")
+@RequiredArgsConstructor
 public class ActorController {
 
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final ActorService actorService;
 
-
-    //  POST
+    // Create (POST)
     @PostMapping
-    @Transactional
     public ResponseEntity<Actor> createActor(@RequestBody Actor actor) {
-
-        entityManager.persist(actor);
-
-        return ResponseEntity.ok(actor);
+         Actor savedActor = actorService.createActor(actor);
+        return new ResponseEntity<>(savedActor, HttpStatus.CREATED);
     }
 
-
-    // READ ALL - GET
+    //  Read all (GET)
     @GetMapping
     public ResponseEntity<List<Actor>> getAllActors() {
-
-        List<Actor> actors = entityManager
-                .createQuery("SELECT a FROM Actor a", Actor.class)
-                .getResultList();
-
-        return ResponseEntity.ok(actors);
+          return ResponseEntity.ok(actorService.getAllActors());
     }
 
-
-    // READ ONE - GET BY ID
+    //  Read by ID (GET)
     @GetMapping("/{id}")
     public ResponseEntity<Actor> getActorById(@PathVariable Long id) {
-
-        Actor actor = entityManager.find(Actor.class, id);
-
-        if (actor == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        return ResponseEntity.ok(actor);
+        return actorService.getActorById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-
-    // UPDATE - PUT
+    //  Full update (PUT)
     @PutMapping("/{id}")
-    @Transactional
-    public ResponseEntity<Actor> updateActor(
-            @PathVariable Long id,
-            @RequestBody Actor updatedActor) {
-
-        Actor existingActor = entityManager.find(Actor.class, id);
-
-        if (existingActor == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        existingActor.setActorName(updatedActor.getActorName());
-        existingActor.setMovieName(updatedActor.getMovieName());
-
-        return ResponseEntity.ok(existingActor);
+    public ResponseEntity<Actor> updateActor(@PathVariable Long id, @RequestBody Actor updatedActor) {
+        return actorService.updateActor(id, updatedActor)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-
-    // PARTIAL UPDATE - PATCH
+    //  Partial update (PATCH)
     @PatchMapping("/{id}")
-    @Transactional
-    public ResponseEntity<Actor> patchActor(
-            @PathVariable Long id,
-            @RequestBody Map<String, Object> updates) {
-
-        Actor existingActor = entityManager.find(Actor.class, id);
-
-        if (existingActor == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        if (updates.containsKey("actorName")) {
-            existingActor.setActorName(
-                    (String) updates.get("actorName"));
-        }
-
-        if (updates.containsKey("movieName")) {
-            existingActor.setMovieName(
-                    (String) updates.get("movieName"));
-        }
-
-        return ResponseEntity.ok(existingActor);
+    public ResponseEntity<Actor> patchActor(@PathVariable Long id, @RequestBody Actor patchData) {
+        return actorService.patchActor(id, patchData)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
-
-    // DELETE - DELETE
+    //  Delete
     @DeleteMapping("/{id}")
-    @Transactional
     public ResponseEntity<Void> deleteActor(@PathVariable Long id) {
-
-        Actor actor = entityManager.find(Actor.class, id);
-
-        if (actor == null) {
-            return ResponseEntity.notFound().build();
+        if (!actorService.deleteActor(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-
-        entityManager.remove(actor);
-
         return ResponseEntity.noContent().build();
     }
 }
